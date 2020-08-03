@@ -1,7 +1,7 @@
 import csv
 from shapely.geometry import Point
+from shapely import wkt
 import numpy as np
-
 
 class FaultSubSectionFactory():
 
@@ -35,6 +35,7 @@ class FaultSubSection():
         fs._dip = float(row['dip (deg)'])
         fs._top_depth = float(row['top_depth (km)'])
         fs._bottom_depth = float(row['bottom_depth (km)'])
+        fs._tile_geometry = wkt.loads(row['tile_geometry'])
 
         return fs
 
@@ -75,6 +76,9 @@ class FaultSubSection():
     def bottom_depth(self):
         return self._bottom_depth
 
+    @property
+    def tile_coords(self):
+        return list(self._tile_geometry.exterior.coords)
 
 class SheetFault():
     def __init__(self, name):
@@ -83,7 +87,7 @@ class SheetFault():
         self._column_max = 0
         self._row_max = 0
         # re-arrange the subsections as per their strike-dip_indices
-        self._grid = np.empty((20, 20))
+        self._grid = np.empty((200, 200))
         self._grid[:] = np.nan
         self._ruptures = []
 
@@ -112,23 +116,18 @@ class SheetFault():
     def sub_sections(self):
         return self._sub_sections
 
-    def get_ruptures(self, spec):
 
+    def get_rupture_ids(self, spec):
         # name = spec['name']
         scale = spec['scale']
         aspect = spec['aspect']
 
         min_fill_factor = spec.get('min_fill_factor', 0.75)
+        interval = spec.get('interval', 1)
         min_sections = int(scale * scale * aspect) * min_fill_factor
 
-        def tuples_for_rupture_ids(ids):
-            res = []
-            for id in ids:
-                res.append(self.sub_sections[id].strike_dip_index)
-            return res
-
-        for col in range(0, self._column_max + 1):
-            for row in range(0, self._row_max + 1):
+        for col in range(0, self._column_max + 1, interval):
+            for row in range(0, self._row_max + 1, interval):
                 # get ruptures by range
                 rupt = self._grid[col:col+int(scale*aspect), row:row+scale]
                 # remove empty values
@@ -136,5 +135,18 @@ class SheetFault():
                 # convert to integerrs and get a flat list
                 rupt = rupt.astype(int).flatten().tolist()
                 if len(rupt) and len(rupt) > min_sections:
-                    print(tuples_for_rupture_ids(rupt))
-                    yield tuples_for_rupture_ids(rupt)
+                    yield rupt
+
+    def get_rupture_tuples(self, spec):
+        def tuples_for_rupture_ids(ids):
+            res = []
+            for id in ids:
+                res.append(self.sub_sections[id].strike_dip_index)
+            return res
+        
+        for rupt in self.get_rupture_ids(spec):
+            print(tuples_for_rupture_ids(rupt))
+            yield tuples_for_rupture_ids(rupt)
+
+    def get_ruptures(self, spec):
+        return self.get_rupture_tuples(spec)
