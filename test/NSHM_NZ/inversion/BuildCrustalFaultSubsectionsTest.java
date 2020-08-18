@@ -42,9 +42,9 @@ import scratch.UCERF3.utils.FaultSystemIO;
 import scratch.UCERF3.inversion.UCERF3SectionConnectionStrategy;
 
 /* 
- * Objective: test/validate the subsections, and in turn, to learn how to work with the codes.
+ * Objective: Examine how the subsections are build.
  * 
- * Fault sections are subdivided such that subsections have length at least(?) 0.5 of the seismogenic width - complete down-dip width DDW. 
+ * Fault sections are subdivided such that subsections have length at least(or is it at most?) 0.5 of the seismogenic width - complete down-dip width DDW. 
  * DDW is not a measure of vertical depth, but of rupture extent that encompasses DDW. Fault-dip angle have an key role.
  * 
  * Questions:
@@ -113,13 +113,16 @@ public class BuildCrustalFaultSubsectionsTest {
 			
 			// Two ways by which we can retrieve the length of a subsection, which provide approximately equal lengths. 
 			// I assume that a Fault Trace is a straight line. 
-			double lengthOfSubSection =  pSect.getFaultTrace().getTraceLength()/newSubSects.size();
+			// double lengthOfSubSection =  pSect.getFaultTrace().getTraceLength()/newSubSects.size();
+			// System.out.println("Length of subsection by division of the fault trace = " 
+			//			+ lengthOfSubSection);
 			
-			System.out.println("Length of subsection by division of the fault trace = " 
-						+ lengthOfSubSection);
+			double lengthOfSubSection = newSubSects.get(1).getFaultTrace().getTraceLength();
 			
-			System.out.println("Length of subsection from the subsection = "
-						+ newSubSects.get(1).getFaultTrace().getTraceLength());
+			System.out.println("Length of subsection from the subsection = " + lengthOfSubSection);
+			
+			assertEquals(Boolean.TRUE,lengthOfSubSection>=0.5*ddw);
+			// if it fails, length of at least two subsections may be smaller than DDW   
 			
 			subSections.addAll(newSubSects);
 			sectIndex += newSubSects.size();

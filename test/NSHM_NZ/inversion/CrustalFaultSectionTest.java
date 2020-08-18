@@ -42,9 +42,7 @@ import scratch.UCERF3.utils.FaultSystemIO;
 import scratch.UCERF3.inversion.UCERF3SectionConnectionStrategy;
 
 /*
- * Build FaultSections from a CSV fixture containing 9 10km * 10km subsections of the Hikurangi Interface geometry.
- * And neighbor connection data
- * @author chrisbc
+ * discarded ---
 */
 
 
